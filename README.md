@@ -2,6 +2,7 @@
 Tarea 2 del curso Programación en R. Elaborado por Rosario Ureña Mena
 ## Descripción 
 El presente repositorio presenta estadísticas nacionales de contagio por COVID-19 para Costa Rica, a partir de datos publicados por el Ministerio de Salud.
+La publicación generada se encuentra en _https://rosurme.github.io/TAREA_2/_
 
 **Referencias**
 
