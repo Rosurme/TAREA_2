@@ -222,4 +222,7 @@ histograma_canton <- covid_cantonal_positivos |>
 
 ggplotly(histograma_canton)
 ```
+```{r}
+#| label: cargar_repositorio
+``
 
