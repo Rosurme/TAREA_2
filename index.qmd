@@ -1,0 +1,225 @@
+---
+title: "Index"
+author: "Rosario Ureña Mena. A76600"
+format: 
+  html:
+    code-fold: true
+editor: visual
+---
+
+## Universidad de Costa Rica
+
+## Maestría académica en Gestión Integral del Recurso Hídrico
+
+## Curso PF 0953, Programación en R, 2022-II
+
+## Profesor: Manuel Vargas del Valle
+
+# TAREA #2
+
+Cargar librerías
+
+```{r}
+#| label: cargar_librerias
+library(DT)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+library(readr)
+library(tidyverse)
+options(scipen = 7)
+library(viridis)
+```
+
+#### Datos de COVID-19: Tabla GENERAL con las columnas necesarias, y Tabla POSITIVOS con codificacion para tildes
+
+```{r}
+#| label: cargar_datos_de_covid
+covid_general <- read_delim(file = "C:/Users/rosur/Documents/CURSO PROGRAMACIÓN/TAREA_2/05_30_22_CSV_GENERAL.csv",
+                              col_select = c(
+                                "FECHA",
+                                "positivos",
+                                "nue_posi",
+                                "muj_posi",
+                                "hom_posi",
+                                "extranj_posi",
+                                "adul_posi",
+                                "am_posi",
+                                "menor_posi",
+                                "RECUPERADOS",
+                                "fallecidos",
+                                "nue_falleci",
+                                "salon",
+                                "UCI"))
+
+covid_positivos <- read_delim(file = "C:/Users/rosur/Documents/CURSO PROGRAMACIÓN/TAREA_2/05_30_22_CSV_POSITIVOS.csv",
+                              locale = locale(encoding = "WINDOWS-1252"))
+
+```
+
+### Preparación de datos
+
+Cambio de nombre de las variables de la tabla GENERAL.
+
+```{r}
+#| label: cambio_nombre_variables
+covid_general <-
+  covid_general |>
+  rename(
+    fecha = FECHA,
+    recuperados = RECUPERADOS,
+    nuevos_positivos = nue_posi,
+    nuevos_fallecidos = nue_falleci,
+    uci = UCI,
+    hombres = hom_posi,
+    mujeres = muj_posi,
+    extranjeros = extranj_posi,
+    adultos = adul_posi,
+    adulto_mayor =am_posi,
+    menor = menor_posi
+  )
+
+```
+
+Conversiones de fechas de la tabla GENERAL.
+
+```{r}
+#| label: convertir_formato_fecha
+covid_general <-
+  covid_general |>
+  mutate(fecha = as.Date(fecha, format = "%d/%m/%Y"))
+
+```
+
+Eliminación de columnas no necesarias de la tabla POSITIVOS.
+
+```{r}
+#| label: eliminar_columnas_innecesarias_covid_positivos
+covid_positivos <-
+  covid_positivos |>
+  select(provincia,canton, "03/06/2020":"30/05/2022")
+```
+
+Eliminación de filas innecesarias.
+
+```{r}
+#| label: eliminar_filas_innecesarias
+covid_positivos <-
+  covid_positivos |>
+  drop_na()
+
+covid_general <-
+  covid_general |>
+drop_na()
+```
+
+# Resultados
+
+1.  Una tabla que muestre datos diarios de COVID (del archivo 05_30_22_CSV_GENERAL.csv). Incluya las columnas: fecha, casos positivos acumulados de hombres (hom_posi), casos positivos acumulados de mujeres (muj_posi), casos positivos acumulados de menores (menor_posi), casos positivos acumulados de adultos (adul_posi), casos positivos acumulados de adultos mayores (am_posi) y casos positivos nuevos (nue_posi).
+
+```{r}
+#| label: tabla_covid_general
+tabla_general <- 
+  covid_general |>
+  select(fecha,hombres,mujeres, menor, adultos, adulto_mayor, nuevos_positivos) |>
+  datatable(options = list( pageLength = 5))
+tabla_general
+```
+
+2.  Un gráfico de barras que muestre la cantidad de casos positivos nuevos por día. Es decir, debe contener una barra por cada día, desde el 2020-06-03 hasta el 2022-05-30.
+
+```{r}
+#| label: grafico_casos_nuevos_generales_diarios
+
+casos_nuevos_diario <- 
+  covid_general |>
+  ggplot(aes(x=fecha, y =nuevos_positivos))+
+  geom_col()+
+  ggtitle("Casos positivos de COVID-19 por día en Costa Rica" ) +
+  labs(subtitle = "Del 03 de junio del 2020 al 30 de mayo del 2022",
+       caption = "Fuente: Ministerio de Salud de Costa Rica")+
+  xlab("Fecha")+
+  ylab("cantidad de casos positivos")+
+  theme_classic()
+
+ggplotly(casos_nuevos_diario)
+```
+
+3.  Un gráfico de líneas que muestre la evolución a través del tiempo de los casos positivos acumulados de hombres y de los casos positivos acumulados de mujeres.
+
+```{r}
+#| label: casos_positivos_hombres_y_mujeres
+acumulado_sexo <-
+  covid_general |>
+  ggplot(aes(x= fecha))+
+  geom_line(aes(y = hombres), color = "green")+
+  geom_line(aes(y = mujeres), color = "blue")+
+  ggtitle("Cantidad acumulada de positivos por COVID-19 según sexo")+
+  labs(caption = "Fuente: Ministerio de Salud de Costa Rica", color = "sexo")+
+  xlab("Fecha")+
+  ylab("Cantidad de personas")
+  theme_classic()
+
+ggplotly(acumulado_sexo)
+```
+
+4. Un gráfico de líneas que muestre la evolución a través del tiempo de los casos positivos acumulados de menores, los casos positivos acumulados de adultos y de los casos positivos acumulados de adultos mayores.
+
+```{r}
+#| label: acumulado_positivos_edad
+acumulado_edad <-
+  covid_general |>
+  ggplot(aes(x= fecha))+
+  geom_line(aes(y = menor), color = "yellow")+
+  geom_line(aes(y = adultos), color = "orange")+
+  geom_line(aes(y = adulto_mayor), color = "brown")+
+  ggtitle("Cantidad acumulada de positivos por COVID-19 según grupo de edad")+
+  labs(caption = "Fuente: Ministerio de Salud de Costa Rica", color = "edad")+
+  xlab("Fecha")+
+  ylab("Cantidad de personas")
+  theme_classic()
+
+ggplotly(acumulado_edad)
+```
+
+5. Una tabla que muestre la cantidad casos positivos en cantones. Incluya las columnas provincia (provincia), cantón (canton) y casos al 2022-05-30 (30/05/2022). No incluya la fila de “Otros” o la que contiene valores nulos
+
+En este caso ya había filtrado los valores nulos, entonces se eligen los cantones, excepto la línea Otros.
+Anteriormente se habían eliminado las filas de valores nulos. Se hace la corrección para excluir la fila de cantón "Otros".
+```{r}
+#| label: acumulado_positivos_canton
+acumulado_canton <- 
+  covid_positivos |>
+  filter(!(provincia == "Otros")) |>
+  select(provincia, canton, "30/05/2022") |>
+  datatable(options = list( pageLength = 5))
+
+acumulado_canton
+```
+6. Un histograma que muestre la distribución de los casos positivos en cantones.
+
+Hubo dificultades con el nombre de la variable acumulado total a la fecha 30 de mayo 2022, probablemente se interpretaba como una fórmula, se realizó un nuevo dataframe y se cambió el nombre de la columna
+```{r}
+#| label: histrograma_positivos_cantones
+
+covid_cantonal_positivos <-
+  covid_positivos[, c("provincia",
+                               "canton",
+                               "30/05/2022")]
+colnames(covid_cantonal_positivos) <-
+  c("provincia",
+    "canton",
+    "positivos")
+
+histograma_canton <- covid_cantonal_positivos |>
+  ggplot(aes(x = positivos), color= canton)+
+  geom_histogram(bins = 20)+
+  ggtitle("Distribución cantonal de los casos positivos por COVID")+
+  labs(subtitle = "Acumulado total al 30 de mayo 2022", caption ="Fuente: Ministerio de Salud de Costa Rica")+
+  xlab("Cantidad acumulada de positivos por COVID-19")+
+  ylab("Cantidad de cantones")+
+  theme_classic()
+
+ggplotly(histograma_canton)
+```
+
